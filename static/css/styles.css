@@ -1,0 +1,158 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap');
+
+/* General Styling */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: rgba(80, 80, 80, 0.9); /* Brighter gray */
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 60%;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: rgba(50, 50, 50, 0.85); /* Slightly brighter and more transparent */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+/* Heading */
+h1 {
+    text-align: center;
+    color: #fff;
+    font-size: 36px; /* Bigger font size */
+    margin-bottom: 20px;
+}
+
+/* Form Structure */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Labels */
+label {
+    font-weight: 500;
+    color: #f0f0f0;
+    font-size: 16px;
+}
+
+/* Buttons */
+button {
+    padding: 12px;
+    font-size: 16px;
+    color: white;
+    background-color: #64a564; /* Refined pastel green */
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+button:hover {
+    background-color: #508950;
+    transform: scale(1.05);
+}
+
+/* Gain Buttons (Red instead of orange) */
+.apply-filters button {
+    background-color: #d65a5a; /* Darker red */
+}
+
+.apply-filters button:hover {
+    background-color: #b54848;
+}
+
+/* Sliders */
+input[type="range"] {
+    width: 100%;
+    height: 8px;
+    appearance: none;
+    -webkit-appearance: none;
+    background: #555; /* Darker stripe for better visibility */
+    border-radius: 5px;
+    outline: none;
+    transition: background 0.3s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background-color: #d65a5a; /* Dark orange thumb */
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background-color: #d65a5a; /* Dark orange thumb */
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+input[type="range"]:hover::-webkit-slider-thumb {
+    background-color: #b54848;
+    transform: scale(1.1);
+}
+
+input[type="range"]:hover::-moz-range-thumb {
+    background-color: #b54848;
+    transform: scale(1.1);
+}
+
+/* Upload Section */
+.upload-section {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-start; /* Align to the left */
+    align-items: center; /* Align vertically */
+    gap: 15px; /* Space between label and file input */
+    margin-left: 80px; /* Adjust this value to move the section to the left */
+}
+
+input[type="file"] {
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #888;
+    border-radius: 5px;
+    background-color: #444;
+    color: #f0f0f0;
+    cursor: pointer;
+}
+
+input[type="file"]::-webkit-file-upload-button {
+    padding: 8px;
+    background-color: #64a564;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+/* Center Controls Section */
+.controls {
+    display: flex;
+    justify-content: center; /* Center the control buttons */
+    gap: 15px;
+}
+
+button:focus,
+input[type="range"]:focus {
+    outline: none;
+    box-shadow: 0 0 6px #64a564;
+}
+
+.apply-filters button:focus {
+    box-shadow: 0 0 6px #d65a5a;
+}
+
+/* Gain Level Numbers */
+span {
+    color: white; /* Gain level numbers are now white */
+    font-weight: 500;
+}

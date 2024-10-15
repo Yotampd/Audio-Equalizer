@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Audio Equalizer</title>
+    <script>
+        // JavaScript function to update the displayed value dynamically
+        function updateValue(slider, displayId) {
+            document.getElementById(displayId).innerText = slider.value;
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Audio Equalizer</h1>
+        <form method="POST" action="{{ url_for('process_audio') }}" enctype="multipart/form-data">
+            <div class="controls">
+                <button type="submit" name="action" value="record">Start Recording</button>
+                <button type="submit" name="action" value="stop_recording">Stop Recording</button>
+                <button type="submit" name="action" value="playback">Play</button>
+                <!-- Move Stop Playback button here and style it -->
+                <button type="submit" formaction="{{ url_for('stop_playback') }}">Stop Playback</button>
+            </div>
+            
+            <div class="upload-section">
+                <label for="audio_file">Upload Sound File:</label>
+                <input type="file" id="audio_file" name="file" accept=".wav,.mp3,.ogg,.flac,.aac">
+                <button type="submit" name="action" value="upload_file">Upload</button>
+            </div>
+
+            <div class="equalizer-controls">
+                <label for="bass_gain">Bass Gain:</label>
+                <input type="range" id="bass_gain" name="bass_gain" min="0.5" max="12.0" step="0.5" 
+                        value="{{ request.args.get('bass_gain', 1.0) }}" oninput="updateValue(this, 'bass_value')">
+                <span id="bass_value">{{ request.args.get('bass_gain', 1.0) }}</span>
+                <br>
+                
+                <label for="mid_low_gain">Mid Low Gain:</label>
+                <input type="range" id="mid_low_gain" name="mid_low_gain" min="0.5" max="12.0" step="0.5"
+                    value="{{ request.args.get('mid_low_gain', 1.0) }}" oninput="updateValue(this, 'mid_low_value')">
+                <span id="mid_low_value">{{ request.args.get('mid_low_gain', 1.0) }}</span>
+                <br>
+                
+                <label for="mid_high_gain">Mid High Gain:</label>
+                <input type="range" id="mid_high_gain" name="mid_high_gain" min="0.5" max="12.0" step="0.5" 
+                       value="{{ request.args.get('mid_high_gain', 1.0) }}" oninput="updateValue(this, 'mid_high_value')">
+                <span id="mid_high_value">{{ request.args.get('mid_high_gain', 1.0) }}</span>
+                <br>
+                
+                <label for="treble_gain">Treble Gain:</label>
+                <input type="range" id="treble_gain" name="treble_gain" min="0.5" max="12.0" step="0.5" 
+                       value="{{ request.args.get('treble_gain', 1.0) }}" oninput="updateValue(this, 'treble_value')">
+                <span id="treble_value">{{ request.args.get('treble_gain', 1.0) }}</span>
+                <br>
+            </div>
+            
+            <div class="apply-filters">
+                <button type="submit" name="action" value="apply_filters">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

@@ -276,8 +276,10 @@ def handle_file_upload(file):
         audio.export("Recording.wav", format = "wav") #converting 
         os.remove(temp)
     else:
+        if os.path.exists("Recording.wav"):
+            os.remove("Recording.wav")  
         os.rename(temp, "Recording.wav")
-
+    
     return "Recording.wav"
 
 if __name__ == '__main__':

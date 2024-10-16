@@ -3,7 +3,6 @@ import numpy as np
 from scipy.signal import butter , filtfilt , lfilter
 import wave
 import pyaudio
-import matplotlib.pyplot as plt
 import threading
 import os
 from pydub import AudioSegment  
@@ -32,9 +31,6 @@ def home():
 def process_audio():
     global button, saved_audio_arr, playback_button
     
-    print("Form Data Received:", request.form)
-
-
     #reterive gain values from the form, default is 1 - how much will the filter effect
     bass_gain = float(request.form.get('bass_gain', 1.0))
     mid_low_gain = float(request.form.get('mid_low_gain', 1.0))
@@ -56,7 +52,7 @@ def process_audio():
         delete_file("filtered_data.wav")
         return redirect(url_for("home"))
     if action == 'record':
-        bass_gain = 1.0
+        bass_gain = 1.0 #resetting the sliders for a new recording
         mid_low_gain = 1.0
         mid_high_gain = 1.0
         treble_gain = 1.0
@@ -65,7 +61,7 @@ def process_audio():
     elif action == 'stop_recording':
         stop_recording()
     elif action == 'playback':
-        playback_button = True
+        playback_button = True #new thread
         playback_thread = threading.Thread(target=start_playback)
         playback_thread.start()
     elif action == 'apply_filters':
@@ -105,7 +101,7 @@ def recording_input(FRAMES_PER_BUFFER = 1024, FORMAT = pyaudio.paInt16, CHANNELS
     
     print("Recording in progress")
 
-    for _ in range(5):  # Discard the first few frames (adjust number if needed)
+    for _ in range(5):  # to avoid delay
         stream.read(FRAMES_PER_BUFFER)
 
 
@@ -176,25 +172,20 @@ def start_playback():
 
 
 def apply_filters(bass_gain, mid_low_gain, mid_high_gain, treble_gain):
-    editable_saved_audio = saved_audio_arr.copy()       
+    editable_saved_audio = saved_audio_arr.copy()
         
         
      # array to store the accumulate the audio
-    filtered_data = np.zeros_like(saved_audio_arr, dtype=np.float32) #using 32 for precision and preventing overflow(too many bits)
+    filtered_data = np.zeros_like(saved_audio_arr, dtype=np.float64) #using 32 for precision and preventing overflow(too many bits)
 
     #LPF
     bass_filtered = low_pass_filter(cutoff=bass_cutoff, gain = bass_gain, data=editable_saved_audio)
     filtered_data += bass_filtered
 
-    print(f"Bass Gain: {bass_gain}")
-    print(f"Mid-Low Gain: {mid_low_gain}")
-    print(f"Mid-High Gain: {mid_high_gain}")
-    print(f"Treble Gain: {treble_gain}")
-
     #BPF
     mid_low_filtered = band_pass_filter(f_low=bass_cutoff, f_high=mid_low_cutoff,  gain = mid_low_gain, data=editable_saved_audio)
     filtered_data += mid_low_filtered
-        
+
 
     mid_high_filtered = band_pass_filter(f_low=mid_low_cutoff, f_high=mid_high_cutoff, gain = mid_high_gain, data=editable_saved_audio)
     filtered_data += mid_high_filtered
@@ -203,10 +194,10 @@ def apply_filters(bass_gain, mid_low_gain, mid_high_gain, treble_gain):
     treble_filtered = high_pass_filter(cutoff=treble_cutoff, gain= treble_gain, data=editable_saved_audio)
     filtered_data += treble_filtered
 
-    #no amplitude alteration - no need to normalize
-
+    filtered_data = apply_normalization(filtered_data)
+    
     ### convert to int16
-    filtered_data = np.clip(filtered_data , -32768 , 32767) #making sure there are no extreme values at the edges 
+    filtered_data = np.clip(filtered_data , -32768 , 32767)  
     filtered_data = filtered_data.astype(np.int16)
     if check(filtered_data, saved_audio_arr):
         print("true")
@@ -214,44 +205,51 @@ def apply_filters(bass_gain, mid_low_gain, mid_high_gain, treble_gain):
         print("false")
     save_wav(filtered_data , "filtered_data.wav")
 
+    print("Max amplitude before filtering:", np.max(np.abs(saved_audio_arr)))
+    print("Max amplitude after filtering:", np.max(np.abs(filtered_data)))
     print(saved_audio_arr)
     print(filtered_data)
     
 
 
 
-def low_pass_filter(cutoff, gain,  data, RATE = 44100, order = 2): #order represents the power of a pole what will be the slope value at the pole value. order 1 -> -20db for decade
+def low_pass_filter(cutoff, gain,  data, RATE = 44100, order = 5): #order represents the power of a pole what will be the slope value at the pole value. order 1 -> -20db for decade
     nyquist = 0.5*RATE #highest freq we can sample with no errors 
     normal_cutoff = cutoff/nyquist
     b , a = butter(order, normal_cutoff, btype="low", analog=False) #Wn = normal_cutoff - knee frequancy, b and a are the filter coefficents
-    filtered_data = lfilter(b, a, data)
+    filtered_data = filtfilt(b, a, data)
     #apply gain
     filtered_data = filtered_data * gain
-
     return filtered_data
 
 
 
-def high_pass_filter(cutoff, gain,  data, RATE = 44100, order = 2): #order represents the power of a pole what will be the slope value at the pole value. order 1 -> -20db for decade
+def high_pass_filter(cutoff, gain,  data, RATE = 44100, order = 5): #order represents the power of a pole what will be the slope value at the pole value. order 1 -> -20db for decade
     nyquist = 0.5*RATE #highest freq we can sample with no errors 
     normal_cutoff = cutoff/nyquist
     b , a = butter(order, normal_cutoff, btype="high", analog=False) #Wn = normal_cutoff - knee frequancy, b and a are the filter coefficents
-    filtered_data = lfilter(b, a, data) #giving only desired frequancy components 
+    filtered_data = filtfilt(b, a, data) #giving only desired frequancy components 
     #apply gain
     filtered_data = filtered_data * gain #y[n] = K*(h[n]*x[n])
     return filtered_data
 
 
-def band_pass_filter(f_low, f_high, gain, data, RATE = 44100, order = 2):
+def band_pass_filter(f_low, f_high, gain, data, RATE = 44100, order = 5):
     nyquist = 0.5*RATE
     normal_lowcut = f_low / nyquist
     normal_highcut = f_high / nyquist
     b , a = butter(order,[normal_lowcut, normal_highcut], btype="band", analog=False )
-    filtered_data = lfilter(b, a, data)
+    filtered_data = filtfilt(b, a, data)
     #apply gain
     filtered_data = filtered_data * gain
     return filtered_data
 
+def apply_normalization(audio_data):
+    max_value = np.max(np.abs(audio_data))
+    if max_value > 12000:  # Set a threshold to avoid normalizing very low amplitude signals
+        return (audio_data / max_value) * 32767  
+    else:
+        return audio_data 
 
 def check(arr1, arr2):
     difference = np.abs(arr1 - arr2)
